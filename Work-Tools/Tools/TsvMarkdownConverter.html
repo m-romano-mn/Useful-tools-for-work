@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>TSV → Markdown 変換ツール</title>
+
+<!-- Google Font -->
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+
+<style>
+* {
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Poppins', sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    margin: 0;
+    background: radial-gradient(circle at top, #1a1a26, #0b0b12);
+    color: white;
+}
+
+/* Container */
+.container {
+    max-width: 800px;
+    width: 100%;
+    background: rgba(255,255,255,0.05);
+    backdrop-filter: blur(12px);
+    border-radius: 20px;
+    padding: 30px;
+    box-shadow: 0 20px 45px rgba(0,0,0,0.6);
+}
+
+/* Header */
+h1 {
+    text-align: center;
+    margin-bottom: 24px;
+    font-weight: 700;
+    color: #ffffff;
+    text-shadow: 0 0 8px rgba(0,0,0,0.7);
+}
+
+/* Labels */
+.label {
+    margin: 10px 0 6px;
+    font-weight: 600;
+    color: #f0f0f0;
+}
+
+/* Textarea */
+textarea {
+    width: 100%;
+    min-height: 180px;
+    padding: 14px;
+    font-family: monospace;
+    font-size: 14px;
+    border-radius: 12px;
+    border: 1px solid rgba(255,255,255,0.15);
+    background: rgba(255,255,255,0.08);
+    color: white;
+    outline: none;
+    resize: vertical;
+    transition: 0.2s ease;
+}
+
+textarea:focus {
+    border-color: #6c5ce7;
+    box-shadow: 0 0 0 3px rgba(108,92,231,0.25);
+}
+
+/* Buttons */
+.buttons {
+    display: flex;
+    justify-content: center;
+    gap: 14px;
+    margin: 20px 0;
+}
+
+button {
+    padding: 12px 24px;
+    border-radius: 12px;
+    border: none;
+    font-weight: 600;
+    cursor: pointer;
+    font-size: 14px;
+    transition: 0.25s ease;
+    letter-spacing: 0.5px;
+}
+
+button:first-of-type {
+    background: linear-gradient(45deg, #6c5ce7, #a29bfe);
+    color: white;
+}
+
+button.secondary {
+    background: linear-gradient(45deg, #00b894, #55efc4);
+    color: #111;
+}
+
+button:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 25px rgba(0,0,0,0.6);
+}
+
+/* Clear button */
+.clear-button {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    background: linear-gradient(45deg, #ff6b6b, #ff4757);
+    color: white;
+    font-size: 13px;
+    padding: 8px 16px;
+    border-radius: 10px;
+}
+
+.output {
+    margin-top: 20px;
+    max-height: 300px;
+    overflow-y: auto;
+    padding-right: 8px; 
+}
+
+.output pre {
+    background: rgba(255,255,255,0.08);
+    padding: 15px;
+    border-radius: 12px;
+    border: 1px solid rgba(255,255,255,0.15);
+    white-space: pre-wrap;
+    word-break: break-word;
+    font-family: monospace;
+    font-size: 14px;
+    color: white;
+    margin: 0; 
+}
+
+/* Checkbox */
+.checkbox-container {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 12px;
+}
+
+.checkbox-container input {
+    accent-color: #6c5ce7;
+}
+
+/* Popup */
+.popup {
+    position: fixed;
+    top: 10px;
+    right: 20px;
+    background-color: #00b894;
+    color: #fff;
+    padding: 10px 16px;
+    border-radius: 10px;
+    font-size: 14px;
+    opacity: 0;
+    transform: translateY(-20px);
+    pointer-events: none;
+    transition: opacity 0.3s ease, transform 0.3s ease;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+}
+
+.popup.show {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.home-button {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: linear-gradient(45deg, #6c5ce7, #a29bfe);
+    color: white;
+    padding: 10px 16px;
+    border-radius: 12px;
+    text-decoration: none;
+    font-weight: 600;
+    box-shadow: 0 8px 15px rgba(0,0,0,0.4);
+    transition: 0.25s ease;
+    z-index: 1000;
+}
+
+.home-button:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 25px rgba(0,0,0,0.6);
+}
+</style>
+</head>
+<body>
+<a href="../index.html" class="home-button">Home</a>
+<div class="container">
+    <h1>TSV → Markdown 変換</h1>
+
+    <button class="clear-button" onclick="clearAll()">Clear</button>
+
+    <div class="label">TSV入力</div>
+    <textarea id="tsvInput" placeholder="ここにTSV形式の表を貼り付けてください"></textarea>
+
+    <div class="checkbox-container">
+      <input type="checkbox" id="includeHeader" checked>
+      <label for="includeHeader">ヘッダーを含める</label>
+    </div>
+
+    <div class="buttons">
+      <button onclick="convertTSVtoMarkdown()">変換</button>
+      <button class="secondary" onclick="copyMarkdown()">コピー</button>
+    </div>
+
+    <div class="output">
+      <div class="label">Markdown出力</div>
+      <pre id="markdownOutput"></pre>
+    </div>
+
+    <div id="copyPopup" class="popup">内容をクリップボードにコピーしました。</div>
+</div>
+
+<script>
+function convertTSVtoMarkdown() {
+  const input = document.getElementById('tsvInput').value.trim();
+  const output = document.getElementById('markdownOutput');
+  const includeHeader = document.getElementById('includeHeader').checked;
+
+  if (!input) { output.textContent = ''; return; }
+
+  const rows = input.split('\n').map(row => row.split('\t'));
+  if (rows.length === 0) { output.textContent = ''; return; }
+
+  let markdown = '';
+
+  if (includeHeader) {
+    markdown += '| ' + rows[0].join(' | ') + ' |\n';
+  } else {
+    markdown += '| ' + rows[0].map(() => '').join(' | ') + ' |\n';
+  }
+
+  markdown += '| ' + rows[0].map(() => '---').join(' | ') + ' |\n';
+
+  const startRow = includeHeader ? 1 : 0;
+  for (let i = startRow; i < rows.length; i++) {
+    markdown += '| ' + rows[i].join(' | ') + ' |\n';
+  }
+
+  output.textContent = markdown;
+}
+
+function copyMarkdown() {
+  const markdown = document.getElementById('markdownOutput').textContent;
+  const popup = document.getElementById('copyPopup');
+
+  if (!markdown) return;
+
+  navigator.clipboard.writeText(markdown).then(() => {
+    popup.classList.add('show');
+    setTimeout(() => popup.classList.remove('show'), 1000);
+  });
+}
+
+function clearAll() {
+  document.getElementById('tsvInput').value = '';
+  document.getElementById('markdownOutput').textContent = '';
+  document.getElementById('includeHeader').checked = true;
+}
+</script>
+
+</body>
+</html>
